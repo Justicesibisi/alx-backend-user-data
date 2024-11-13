@@ -1,51 +1,66 @@
-# api/v1/app.py
+#!/usr/bin/env python3
+"""
+Main module for the API
+"""
+from os import getenv
 from flask import Flask, jsonify, abort, request
-from api.v1.views import app_views
 from flask_cors import CORS
-from api.v1.auth.auth import Auth  # Import the Auth class
+from api.v1.views import app_views
+from api.v1.auth.auth import Auth
 
 app = Flask(__name__)
+
+# Registering the blueprint
 app.register_blueprint(app_views)
+
+# Enabling CORS
 CORS(app, resources={r"/api/v1/*": {"origins": "*"}})
 
-# Initialize auth to None
+# Create an instance of Auth
 auth = None
 
-# Check the AUTH_TYPE environment variable to initialize the correct authentication class
+# Load authentication type from the environment variable
 auth_type = getenv("AUTH_TYPE")
+
 if auth_type == "auth":
     auth = Auth()
 
 @app.before_request
 def before_request():
-    """Before request handler for API authentication"""
+    """Filter each request and check for authentication"""
+    # If authentication is not required, skip the validation
     if auth is None:
-        return  # Do nothing if no authentication is defined
+        return
+    
+    # List of paths that don't require authentication
+    excluded_paths = ['/api/v1/status/', '/api/v1/unauthorized/', '/api/v1/forbidden/']
+    
+    # Check if the path requires authentication
+    if not auth.require_auth(request.path, excluded_paths):
+        return
 
-    # List of routes that don't require authentication
-    excluded_routes = ['/api/v1/status/', '/api/v1/unauthorized/', '/api/v1/forbidden/']
-
-    # If the current path is not excluded from authentication checks
-    if not auth.require_auth(request.path, excluded_routes):
-        return  # No authentication needed for this request
-
-    # Check if the Authorization header is present
+    # If no Authorization header is present, raise 401 Unauthorized
     if auth.authorization_header(request) is None:
-        abort(401)  # Unauthorized if no header
+        abort(401)
 
-    # Check if the current user is authenticated
+    # If the current user is not authenticated, raise 403 Forbidden
     if auth.current_user(request) is None:
-        abort(403)  # Forbidden if no user is found
+        abort(403)
 
 @app.errorhandler(401)
 def unauthorized_error(error) -> str:
-    """ Unauthorized handler """
+    """Return a 401 Unauthorized error"""
     return jsonify({"error": "Unauthorized"}), 401
 
 @app.errorhandler(403)
 def forbidden_error(error) -> str:
-    """ Forbidden handler """
+    """Return a 403 Forbidden error"""
     return jsonify({"error": "Forbidden"}), 403
+
+@app.errorhandler(404)
+def not_found_error(error) -> str:
+    """Return a 404 Not Found error"""
+    return jsonify({"error": "Not found"}), 404
 
 if __name__ == "__main__":
     host = getenv("API_HOST", "0.0.0.0")
