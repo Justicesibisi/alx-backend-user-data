@@ -5,10 +5,8 @@ import base64
 from api.v1.auth.auth import Auth
 
 class BasicAuth(Auth):
-    """Basic Authentication class that inherits from Auth.
-    Currently an empty class, to be implemented later.
-    """
-    
+    """Basic Authentication class that inherits from Auth."""
+
     def extract_base64_authorization_header(self, authorization_header: str) -> str:
         """Extracts the Base64 part from the Authorization header for Basic Authentication"""
         if authorization_header is None:
@@ -30,4 +28,15 @@ class BasicAuth(Auth):
             return decoded_bytes.decode('utf-8')
         except (base64.binascii.Error, UnicodeDecodeError):
             return None
+
+    def extract_user_credentials(self, decoded_base64_authorization_header: str) -> (str, str):
+        """Extracts user credentials (email and password) from the Base64 decoded string."""
+        if decoded_base64_authorization_header is None:
+            return None, None
+        if not isinstance(decoded_base64_authorization_header, str):
+            return None, None
+        if ":" not in decoded_base64_authorization_header:
+            return None, None
+        email, password = decoded_base64_authorization_header.split(":", 1)
+        return email, password
 
