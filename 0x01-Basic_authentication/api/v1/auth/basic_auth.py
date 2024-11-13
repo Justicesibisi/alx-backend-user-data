@@ -3,8 +3,9 @@
 """
 from typing import List, TypeVar
 from flask import request
-from models.user import User  # Import User model
-from api.v1.auth.auth import Auth  # Import the Auth class
+import base64
+from models.user import User
+from api.v1.auth.auth import Auth
 
 class BasicAuth(Auth):
     """ Basic Authentication class that inherits from Auth
@@ -54,4 +55,32 @@ class BasicAuth(Auth):
             return None
 
         return user
+
+    def current_user(self, request=None) -> TypeVar('User'):
+        """Returns the current user based on the request"""
+        if request is None:
+            return None
+
+        # Retrieve the Authorization header
+        authorization_header = self.authorization_header(request)
+        if authorization_header is None:
+            return None
+
+        # Extract the Base64 part
+        base64_authorization_header = self.extract_base64_authorization_header(authorization_header)
+        if base64_authorization_header is None:
+            return None
+
+        # Decode the Base64 part
+        decoded_base64_authorization_header = self.decode_base64_authorization_header(base64_authorization_header)
+        if decoded_base64_authorization_header is None:
+            return None
+
+        # Extract the user credentials
+        user_email, user_pwd = self.extract_user_credentials(decoded_base64_authorization_header)
+        if user_email is None or user_pwd is None:
+            return None
+
+        # Retrieve the user object based on the credentials
+        return self.user_object_from_credentials(user_email, user_pwd)
 
