@@ -1,34 +1,50 @@
 #!/usr/bin/env python3
-""" Auth module for API Authentication
-"""
-from typing import List, TypeVar
+"""Auth module for authentication."""
 from flask import request
+from os import getenv
+
 
 class Auth:
-    """ Authentication class for managing API authentication
-    """
+    """Auth class for managing authentication."""
 
-    def require_auth(self, path: str, excluded_paths: List[str]) -> bool:
-        """Determines if authentication is required for the given path"""
-        # Return True if the path is None or excluded_paths is None or empty
-        if path is None:
+    def require_auth(self, path: str, excluded_paths: list) -> bool:
+        """Determine if a given path requires authentication."""
+        if path is None or excluded_paths is None or not excluded_paths:
             return True
-        if excluded_paths is None or len(excluded_paths) == 0:
-            return True
-        
-        # Normalize the paths to ensure slash tolerance
-        path = path.rstrip("/")  # Remove trailing slashes from the path
-        for excluded_path in excluded_paths:
-            if path == excluded_path.rstrip("/"):  # Compare paths without slashes
+        for exc_path in excluded_paths:
+            if exc_path.endswith('/'):
+                if path.startswith(exc_path[:-1]):
+                    return False
+            elif path == exc_path:
                 return False
         return True
 
     def authorization_header(self, request=None) -> str:
-        """Returns the Authorization header value, or None if not present"""
-        if request and 'Authorization' in request.headers:
-            return request.headers['Authorization']
+        """Return the authorization header from a request."""
+        if request is None or 'Authorization' not in request.headers:
+            return None
+        return request.headers['Authorization']
+
+    def current_user(self, request=None):
+        """Return the current user (to be implemented in derived classes)."""
         return None
 
-    def current_user(self, request=None) -> TypeVar('User'):
-        """Returns the current user from the request, or None if not authenticated"""
-        return None  # No user authentication implemented yet
+    def session_cookie(self, request=None):
+        """
+        Retrieve the session cookie value from the request.
+
+        Args:
+            request (Request): The Flask request object.
+        Returns:
+            str: The value of the session cookie, or None if not found.
+        """
+        if request is None:
+            return None
+        
+        # Get the cookie name from the environment variable
+        session_name = getenv("SESSION_NAME")
+        if not session_name:
+            return None
+        
+        # Retrieve and return the cookie value
+        return request.cookies.get(session_name)
