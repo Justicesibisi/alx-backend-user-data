@@ -5,6 +5,7 @@ from flask import Flask, jsonify, abort, request
 from api.v1.views import app_views
 from api.v1.auth.auth import Auth
 from api.v1.auth.session_auth import SessionAuth
+from api.v1.auth.session_exp_auth import SessionExpAuth  # Add this import
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -20,6 +21,9 @@ if auth_type == "auth":
 elif auth_type == "session_auth":
     from api.v1.auth.session_auth import SessionAuth
     auth = SessionAuth()
+elif auth_type == "session_exp_auth":
+    from api.v1.auth.session_exp_auth import SessionExpAuth  # Use SessionExpAuth
+    auth = SessionExpAuth()  # Instantiate SessionExpAuth
 
 # Excluded paths
 EXCLUDED_PATHS = [

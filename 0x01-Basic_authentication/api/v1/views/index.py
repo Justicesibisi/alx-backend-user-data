@@ -29,3 +29,5 @@ def stats() -> str:
 def unauthorized():
     """Endpoint to raise a 401 Unauthorized error"""
     abort(401)
+    
+    

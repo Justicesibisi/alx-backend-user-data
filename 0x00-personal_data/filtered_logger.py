@@ -24,3 +24,5 @@ def get_db() -> connection.MySQLConnection:
         host=host,
         database=database
     )
+    
+    

@@ -11,3 +11,4 @@ logger.info("name=Alice;email=alice@example.com;ssn=123-45-6789;phone=555-1234;d
 
 print(get_logger.__annotations__.get('return'))
 print("PII_FIELDS:", len(PII_FIELDS))
+

@@ -12,3 +12,4 @@ print(a.require_auth("/api/v1/status/", ["/api/v1/status/"]))  # False
 print(a.require_auth("/api/v1/status", ["/api/v1/status/"]))  # False
 print(a.require_auth("/api/v1/users", ["/api/v1/status/"]))  # True
 print(a.require_auth("/api/v1/users", ["/api/v1/status/", "/api/v1/stats"]))  # True
+

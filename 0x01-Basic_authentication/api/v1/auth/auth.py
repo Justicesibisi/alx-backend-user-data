@@ -32,3 +32,5 @@ class Auth:
     def current_user(self, request=None) -> TypeVar('User'):
         """Returns the current user from the request, or None if not authenticated"""
         return None  # No user authentication implemented yet
+    
+    
