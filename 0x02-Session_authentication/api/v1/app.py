@@ -1,66 +1,33 @@
 #!/usr/bin/env python3
-"""
-Main module for the API
-"""
-from os import getenv
-from flask import Flask, jsonify, abort, request
+"""API app module."""
+from flask import Flask, jsonify, request, abort
 from flask_cors import CORS
-from api.v1.views import app_views
-from api.v1.auth.basic_auth import BasicAuth  # Import the BasicAuth class
+from os import getenv
+from api.v1.auth.basic_auth import BasicAuth
 
 app = Flask(__name__)
+CORS(app)
 
-# Registering the blueprint
-app.register_blueprint(app_views)
-
-# Enabling CORS
-CORS(app, resources={r"/api/v1/*": {"origins": "*"}})
-
-# Create an instance of BasicAuth depending on the environment variable
-auth = None
-auth_type = getenv("AUTH_TYPE")
-
-if auth_type == "basic_auth":
-    auth = BasicAuth()  # Use BasicAuth if AUTH_TYPE is 'basic_auth'
-else:
-    # If no AUTH_TYPE is specified, fall back to a default (you can add your own Auth class here)
-    pass  
+auth = BasicAuth()
 
 @app.before_request
 def before_request():
-    """Filter each request and check for authentication"""
-    # If authentication is not required, skip the validation
-    if auth is None:
-        return
-    
-    # List of paths that don't require authentication
-    excluded_paths = ['/api/v1/status/', '/api/v1/unauthorized/', '/api/v1/forbidden/']
-    
-    # Check if the path requires authentication
+    """Executes before every request."""
+    excluded_paths = ['/api/v1/status/', '/api/v1/unauthorized', '/api/v1/forbidden']
     if not auth.require_auth(request.path, excluded_paths):
         return
-
-    # If no Authorization header is present, raise 401 Unauthorized
-    if auth.authorization_header(request) is None:
+    if not auth.authorization_header(request):
         abort(401)
+    request.current_user = auth.current_user(request)
 
-    # If the current user is not authenticated, raise 403 Forbidden
-    if auth.current_user(request) is None:
-        abort(403)
-
-@app.errorhandler(401)
-def unauthorized_error(error) -> str:
-    """Return a 401 Unauthorized error"""
-    return jsonify({"error": "Unauthorized"}), 401
-
-@app.errorhandler(403)
-def forbidden_error(error) -> str:
-    """Return a 403 Forbidden error"""
-    return jsonify({"error": "Forbidden"}), 403
+@app.route('/api/v1/status', methods=['GET'], strict_slashes=False)
+def status():
+    """Status endpoint."""
+    return jsonify({"status": "OK"})
 
 @app.errorhandler(404)
-def not_found_error(error) -> str:
-    """Return a 404 Not Found error"""
+def not_found(error):
+    """Handles 404 errors."""
     return jsonify({"error": "Not found"}), 404
 
 if __name__ == "__main__":
