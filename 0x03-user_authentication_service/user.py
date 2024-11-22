@@ -31,4 +31,3 @@ class User(Base):
 # Uncomment the following if you need to create the table for testing:
 # engine = create_engine('sqlite:///example.db')  # Replace with your DB URL
 # Base.metadata.create_all(engine)
-
