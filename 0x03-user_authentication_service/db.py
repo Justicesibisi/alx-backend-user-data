@@ -113,3 +113,5 @@ class DB:
         except InvalidRequestError:
             # Raise error if an invalid request is made
             raise ValueError("Invalid request")
+
+

@@ -214,3 +214,5 @@ class Auth:
             hashed_password=new_hashed_password,
             reset_token=None,
         )
+
+
